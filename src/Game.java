@@ -1,78 +1,94 @@
 import javax.swing.*;
-import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
 public class Game implements KeyListener {
 
-    private Snake player;
-    private Food food;
     private JFrame window;
-//    import Jframe as window
+    private Snake snake;
+    private Food food;
     private Graphics graphics;
-
     public static final int width = 30;
     public static final int height = 30;
     public static final int dimension = 20;
-    //why leaving as final?
-    //creating variables
+
 
     public Game() {
+
         window = new JFrame();
-//        create new instance of Jframe and store in window
-        player = new Snake();
-        food = new Food(player);  //What happens when we pass in the player?
+
+        snake = new Snake();
+
+        food = new Food(snake);
+
         graphics = new Graphics(this);
+
         window.add(graphics);
         window.setTitle("Snake");
-        window.setSize(width*dimension, height*dimension);
-        //why is he adding the dimension, why not just 600 by 600??
+        window.setSize(width * dimension + 2, height * dimension + dimension + 4);
         window.setVisible(true);
         window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
 
     }
 
     public void start() {
-        graphics.state = "RUNNING";
-
+        graphics.state = Graphics.states.RUNNING;
     }
 
     public void update() {
-        if(graphics.state == "RUNNING") {
+
+        if(graphics.state == Graphics.states.RUNNING) {
             if(check_food_collision()) {
-                player.grow();
-                food.random_spawn(player); //why are we passing in the player here?
+                snake.grow();
+                food.random_spawn(snake);
+                graphics.getT().setDelay(graphics.delay -= 1);
+                System.out.println(graphics.getT().getDelay());
+
             } else if (check_wall_collision() || check_self_collision()) {
-                graphics.state = "END";
-            }
-            else {
-                player.move();
+                graphics.state = Graphics.states.END;
+                graphics.getT().setDelay(graphics.delay);
+
+            } else {
+                snake.move();
             }
 
         }
     }
 
+    public void restart() {
+            window.getContentPane().invalidate();
+            window.getContentPane().revalidate();
+            window.getContentPane().repaint();
+            graphics.setDelay(100);
+            snake.resetBody();
+            food.random_spawn(snake);
+            graphics.state = Graphics.states.START;
+
+    }
+
+
     private boolean check_wall_collision() {
-        if(player.getX() <0 || player.getX() >= width * dimension
-                || player.getY() <0 || player.getY() >= width * dimension){
+        if(snake.getX() <0 || snake.getX() >= width * dimension
+                || snake.getY() <0 || snake.getY() >= width * dimension){
             return true;
         }
             return false;
     }
     private boolean check_food_collision() {
-        if(player.getX() == food.getX() * dimension && player.getY() == food.getY() * dimension) {
+        if(snake.getX() == food.getX() * dimension && snake.getY() == food.getY() * dimension) {
             return true;
         }
         return false;
     }
 
+    //move method to Snake,
+
     private boolean check_self_collision() {
-        for(int i = 1; i < player.getBody().size(); i++) {
-            if(player.getX() == player.getBody().get(i).x &&
-                    player.getY() == player.getBody().get(i).y)
-            { //Could it not work just by saying if(player.getBody().get(i) == player.getBody().get(i))
-                return true;                                              // seems like the same loop
+        for(int i = 1; i < snake.getBody().size(); i++) {
+            if(snake.getX() == snake.getBody().get(i).x &&
+                    snake.getY() == snake.getBody().get(i).y)
+            {
+                return true;
             }
 
             }
@@ -86,28 +102,31 @@ public class Game implements KeyListener {
     @Override
     public void keyPressed(KeyEvent e) {
         int KeyCode = e.getKeyCode();
-        if(graphics.state == "RUNNING") {
+        if (graphics.state == Graphics.states.RUNNING) {
             if(KeyCode == KeyEvent.VK_W) {
-                player.up();
+                snake.up();
             } else if (KeyCode == KeyEvent.VK_S) {
-                player.down();
+                snake.down();
             } else if(KeyCode == KeyEvent.VK_A) {
-                player.left();
+                snake.left();
             } else {
-                player.right();
+                snake.right();
             }
-        }
-        else {
+        } else if(graphics.state == Graphics.states.END) {
+            if(KeyCode == KeyEvent.VK_W) {
+                restart();
+            }
+        } else {
             this.start();
         }
     }
 
     public Snake getPlayer() {
-        return player;
+        return snake;
     }
 
     public void setPlayer(Snake player) {
-        this.player = player;
+        this.snake   = player;
     }
 
     public Food getFood() {
@@ -118,13 +137,6 @@ public class Game implements KeyListener {
         this.food = food;
     }
 
-    public JFrame getWindow() {
-        return window;
-    }
-
-    public void setWindow(JFrame window) {
-        this.window = window;
-    }
 
     @Override
     public void keyReleased(KeyEvent e) {

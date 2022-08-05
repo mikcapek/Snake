@@ -1,30 +1,32 @@
 import java.awt.*;
+import java.util.ArrayList;
 
 public class Food {
     private int x;
     private int y;
 
-    public Food(Snake player) {
-        this.random_spawn(player);
+    public Food(Snake snake) {
+        this.random_spawn(snake);
 
     }
-    public void random_spawn(Snake player) {
 
-        boolean onSnake = true;
-        while (onSnake) {
-            onSnake = false;
-            x = (int) (Math.random() * Game.width); //how does this work?
-            y = (int) (Math.random() * Game.height);
-            for(Rectangle rectangle : player.getBody()) {
-                if(rectangle.x == x && rectangle.y == y) {
-                    onSnake = true;
-                }
-            }
+//is x,y inside body
+    //remove public getBody
+    public void random_spawn(Snake snake) {
+       do{
+           x = (int)(Math.random() * Game.width - 1);
+           y = (int)(Math.random() * Game.height - 1);
 
+       } while (snake.inBody(x, y));
         }
 
 
-    }
+
+
+
+
+
+
     public int getX() {
         return x;
     }
